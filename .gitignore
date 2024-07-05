@@ -33,4 +33,5 @@
 
 .DS_Store
 .idea
-cmake-build-debug
+cmake-build-*
+build/basic*
