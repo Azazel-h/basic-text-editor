@@ -10,4 +10,6 @@ A basic cross-platform text editor built with ImGui, GLFW and Vulkan.
 - src
 - tests
 
-Just trying to build some "pet desktop application", nothing new here.
+> [!NOTE]
+> Just trying to build some "pet desktop application", nothing new here.
+> Probably, will be a good example of working with GUI in C++ for different OS.
