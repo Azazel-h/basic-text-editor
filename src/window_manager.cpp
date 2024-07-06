@@ -132,7 +132,7 @@ int MyWindow::CreateLogicalDevice()
     if (vkCreateDevice(this->physical_device, &create_info, nullptr, &(this->device)) != VK_SUCCESS)
         rc = LOGICAL_DEVICE_CREATION_ERROR;
 
-    vkGetDeviceQueue(this->device, indecies.graphicsFamily.value(), &(this->graphics_queue));
+    vkGetDeviceQueue(this->device, indecies.graphicsFamily.value(), 0, &(this->graphics_queue));
     return rc;
 }
 

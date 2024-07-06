@@ -18,12 +18,12 @@
 #include <optional>
 
 struct QueueFamilyIndecies {
-    std:optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> graphicsFamily;
 
     bool is_complete() {
         return graphicsFamily.has_value();
     }
-}
+};
 QueueFamilyIndecies FindQueueFamilies(VkPhysicalDevice physical_device);
 
 class MyWindow {
