@@ -42,8 +42,11 @@ class MyWindow {
 
         VkInstance instance = VK_NULL_HANDLE;
         VkPhysicalDevice physical_device = VK_NULL_HANDLE;
+        VkDevice device = VK_NULL_HANDLE;
+        VkQueue graphics_queue = VK_NULL_HANDLE;
         int CreateVulkanInstance();
         int PickPhysicalDevice();
+        int CreateLogicalDevice();
         void CleanUpVulkan();
 };
 

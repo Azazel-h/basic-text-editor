@@ -107,18 +107,52 @@ int MyWindow::PickPhysicalDevice()
 }
 
 
+int MyWindow::CreateLogicalDevice()
+{
+    int rc = OK;
+    QueueFamilyIndecies indecies = FindQueueFamilies(this->physical_device);
+    VkDeviceQueueCreateInfo queue_create_info{};
+    queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queue_create_info.queueFamilyIndex = indecies.graphicsFamily.value();
+    queue_create_info.queueCount = 1;
+
+    float queue_priority = 1.0f;
+    queue_create_info.pQueuePriorities = &queue_priority;
+
+    VkPhysicalDeviceFeatures device_fatures{};
+    VkDeviceCreateInfo create_info{};
+    create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+    create_info.pQueueCreateInfos = &queue_create_info;
+    create_info.queueCreateInfoCount = 1;
+    create_info.pEnabledFeatures = &device_fatures;
+
+    create_info.enabledExtensionCount = 0;
+
+    if (vkCreateDevice(this->physical_device, &create_info, nullptr, &(this->device)) != VK_SUCCESS)
+        rc = LOGICAL_DEVICE_CREATION_ERROR;
+
+    vkGetDeviceQueue(this->device, indecies.graphicsFamily.value(), &(this->graphics_queue));
+    return rc;
+}
+
+
 int MyWindow::InitalizeVulkan()
 {
     int rc = OK;
     if ((rc = CreateVulkanInstance()) == OK)
     {
-        rc = PickPhysicalDevice();
+        if ((rc = PickPhysicalDevice()) == OK)
+        {
+            rc = CreateLogicalDevice();
+        }
     }
     return rc;
 }
 
 void MyWindow::CleanUpVulkan()
 {
+    vkDestroyDevice(this->device, nullptr);
     vkDestroyInstance(this->instance, nullptr);
 }
 
