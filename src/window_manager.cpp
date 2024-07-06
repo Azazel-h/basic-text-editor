@@ -25,6 +25,17 @@ MyWindow::MyWindow(const int width, const int height, char* title)
     window = nullptr;
 }
 
+void MyWindow::CreateVulkanInstance()
+{
+
+}
+
+
+void MyWindow::InitalizeVulkan()
+{
+}
+
+
 int MyWindow::InitializeWindow()
 {
     int rc = OK;
