@@ -14,6 +14,17 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <vector>
+#include <optional>
+
+struct QueueFamilyIndecies {
+    std:optional<uint32_t> graphicsFamily;
+
+    bool is_complete() {
+        return graphicsFamily.has_value();
+    }
+}
+QueueFamilyIndecies FindQueueFamilies(VkPhysicalDevice physical_device);
 
 class MyWindow {
     public:
@@ -23,12 +34,17 @@ class MyWindow {
         GLFWwindow* window;
 
         int InitializeWindow();
-        void InitalizeVulkan();
+        int InitalizeVulkan();
     private:
         int width;
         int height;
         char* title;
-        void CreateVulkanInstance();
+
+        VkInstance instance = VK_NULL_HANDLE;
+        VkPhysicalDevice physical_device = VK_NULL_HANDLE;
+        int CreateVulkanInstance();
+        int PickPhysicalDevice();
+        void CleanUpVulkan();
 };
 
 

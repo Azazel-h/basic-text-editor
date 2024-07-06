@@ -19,20 +19,107 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 MyWindow::MyWindow(const int width, const int height, char* title)
 {
-    MyWindow::width = width;
-    MyWindow::height = height;
-    MyWindow::title = title;
-    window = nullptr;
+    this->width = width;
+    this->height = height;
+    this->title = title;
+    this->window = nullptr;
 }
 
-void MyWindow::CreateVulkanInstance()
+int MyWindow::CreateVulkanInstance()
 {
+    int rc = OK;
+    VkApplicationInfo appInfo{};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = "BTE";
 
+    VkInstanceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pApplicationInfo = &appInfo;
+
+    uint32_t glfw_extension_count = 0;
+    const char** glfw_extensions;
+    glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
+    createInfo.enabledExtensionCount = glfw_extension_count;
+    createInfo.ppEnabledExtensionNames = glfw_extensions;
+
+    createInfo.enabledLayerCount = 0;
+
+    VkResult result = vkCreateInstance(&createInfo, nullptr, &(this->instance));
+    if (result != VK_SUCCESS)
+        rc = CREATE_VULKAN_INSTANCE_ERROR;
+
+    return rc;
+}
+
+QueueFamilyIndecies FindQueueFamilies(VkPhysicalDevice physical_device)
+{
+    QueueFamilyIndecies indecies;
+    uint32_t queue_family_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count, nullptr);
+    std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+    vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count, queue_families.data());
+
+    int i = 0;
+    for (const VkQueueFamilyProperties& queue_family : queue_families)
+    {
+        if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        {
+            indecies.graphicsFamily = i;
+        }
+
+        if (indecies.is_complete())
+            break;
+        ++i;
+    }
+    return indecies;
 }
 
 
-void MyWindow::InitalizeVulkan()
+static bool is_device_suitable(VkPhysicalDevice device)
 {
+    QueueFamilyIndecies indecies = FindQueueFamilies(device);
+    return indecies.is_complete();
+}
+
+
+int MyWindow::PickPhysicalDevice()
+{
+    int rc = OK;
+    uint32_t device_count = 0;
+    std::vector<VkPhysicalDevice> devices(device_count);
+    vkEnumeratePhysicalDevices(this->instance, &device_count, devices.data());
+    if (device_count > 0)
+    {
+        for (const VkPhysicalDevice& device : devices)
+        {
+            if (is_device_suitable(device))
+            {
+                this->physical_device = device;
+                break;
+            }
+        }
+        if (this->physical_device == VK_NULL_HANDLE)
+            rc = PHYSICAL_DEVICE_NOT_FOUND_ERROR;
+    }
+    else
+        rc = PHYSICAL_DEVICE_NOT_FOUND_ERROR;
+    return rc;
+}
+
+
+int MyWindow::InitalizeVulkan()
+{
+    int rc = OK;
+    if ((rc = CreateVulkanInstance()) == OK)
+    {
+        rc = PickPhysicalDevice();
+    }
+    return rc;
+}
+
+void MyWindow::CleanUpVulkan()
+{
+    vkDestroyInstance(this->instance, nullptr);
 }
 
 
@@ -41,12 +128,12 @@ int MyWindow::InitializeWindow()
     int rc = OK;
     if (glfwInit())
     {
-        GLFWwindow* new_window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+        GLFWwindow* new_window = glfwCreateWindow(this->width, this->height, this->title, nullptr, nullptr);
         if (new_window)
         {
-            window = new_window;
+            this->window = new_window;
             glfwSetErrorCallback(error_callback);
-            glfwSetKeyCallback(window, key_callback);
+            glfwSetKeyCallback(this->window, key_callback);
         }
         else
             rc = GLFW_WINDOW_CREATION_ERROR;
@@ -59,9 +146,10 @@ int MyWindow::InitializeWindow()
 
 MyWindow::~MyWindow()
 {
-    if (window)
+    MyWindow::CleanUpVulkan();
+    if (this->window)
     {
-        glfwDestroyWindow(window);
+        glfwDestroyWindow(this->window);
     }
     glfwTerminate();
 }
