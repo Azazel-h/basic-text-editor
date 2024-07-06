@@ -23,10 +23,12 @@ class MyWindow {
         GLFWwindow* window;
 
         int InitializeWindow();
+        void InitalizeVulkan();
     private:
         int width;
         int height;
         char* title;
+        void CreateVulkanInstance();
 };
 
 
