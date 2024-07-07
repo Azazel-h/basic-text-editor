@@ -35,6 +35,8 @@ class MyWindow {
 
         int InitializeWindow();
         int InitalizeVulkan();
+        void CleanUpVulkan();
+
     private:
         int width;
         int height;
@@ -47,7 +49,6 @@ class MyWindow {
         int CreateVulkanInstance();
         int PickPhysicalDevice();
         int CreateLogicalDevice();
-        void CleanUpVulkan();
 };
 
 

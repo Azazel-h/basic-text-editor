@@ -31,6 +31,10 @@ int MyWindow::CreateVulkanInstance()
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "BTE";
+    // appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    // appInfo.pEngineName = "No Engine";
+    // appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -43,6 +47,7 @@ int MyWindow::CreateVulkanInstance()
     createInfo.ppEnabledExtensionNames = glfw_extensions;
 
     createInfo.enabledLayerCount = 0;
+    createInfo.pNext = nullptr;
 
     VkResult result = vkCreateInstance(&createInfo, nullptr, &(this->instance));
     if (result != VK_SUCCESS)
@@ -86,10 +91,11 @@ int MyWindow::PickPhysicalDevice()
 {
     int rc = OK;
     uint32_t device_count = 0;
-    std::vector<VkPhysicalDevice> devices(device_count);
-    vkEnumeratePhysicalDevices(this->instance, &device_count, devices.data());
+    vkEnumeratePhysicalDevices(this->instance, &device_count, nullptr);
     if (device_count > 0)
     {
+        std::vector<VkPhysicalDevice> devices(device_count);
+        vkEnumeratePhysicalDevices(this->instance, &device_count, devices.data());
         for (const VkPhysicalDevice& device : devices)
         {
             if (is_device_suitable(device))
@@ -120,19 +126,19 @@ int MyWindow::CreateLogicalDevice()
     queue_create_info.pQueuePriorities = &queue_priority;
 
     VkPhysicalDeviceFeatures device_fatures{};
+
     VkDeviceCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
     create_info.pQueueCreateInfos = &queue_create_info;
     create_info.queueCreateInfoCount = 1;
     create_info.pEnabledFeatures = &device_fatures;
-
     create_info.enabledExtensionCount = 0;
 
     if (vkCreateDevice(this->physical_device, &create_info, nullptr, &(this->device)) != VK_SUCCESS)
         rc = LOGICAL_DEVICE_CREATION_ERROR;
 
-    vkGetDeviceQueue(this->device, indecies.graphicsFamily.value(), 0, &(this->graphics_queue));
+    else
+        vkGetDeviceQueue(this->device, indecies.graphicsFamily.value(), 0, &(this->graphics_queue));
     return rc;
 }
 
@@ -180,7 +186,7 @@ int MyWindow::InitializeWindow()
 
 MyWindow::~MyWindow()
 {
-    MyWindow::CleanUpVulkan();
+    this->CleanUpVulkan();
     if (this->window)
     {
         glfwDestroyWindow(this->window);
