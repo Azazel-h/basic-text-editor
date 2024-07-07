@@ -12,13 +12,15 @@ int main()
     MyWindow manager(600, 400, title);
     if ((rc = manager.InitializeWindow()) == OK)
     {
-        glfwMakeContextCurrent(manager.window);
-        while (!glfwWindowShouldClose(manager.window))
+        if ((rc = manager.InitalizeVulkan()) == OK)
         {
-            glfwPollEvents();
-            glfwSwapBuffers(manager.window);
+            glfwMakeContextCurrent(manager.window);
+            while (!glfwWindowShouldClose(manager.window))
+            {
+                glfwPollEvents();
+                glfwSwapBuffers(manager.window);
+            }
         }
     }
-
     return rc;
 }
