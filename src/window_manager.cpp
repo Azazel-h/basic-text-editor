@@ -56,7 +56,7 @@ int MyWindow::CreateVulkanInstance()
     return rc;
 }
 
-QueueFamilyIndecies FindQueueFamilies(VkPhysicalDevice physical_device)
+QueueFamilyIndecies MyWindow::FindQueueFamilies(VkPhysicalDevice physical_device)
 {
     QueueFamilyIndecies indecies;
     uint32_t queue_family_count = 0;
@@ -65,13 +65,18 @@ QueueFamilyIndecies FindQueueFamilies(VkPhysicalDevice physical_device)
     vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count, queue_families.data());
 
     int i = 0;
+    VkBool32 present_support = false;
     for (const VkQueueFamilyProperties& queue_family : queue_families)
     {
+        vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, this->surface, &present_support);
         if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
         {
             indecies.graphicsFamily = i;
         }
-
+        if (present_support)
+        {
+            indecies.presentFamily = i;
+        }
         if (indecies.is_complete())
             break;
         ++i;
@@ -79,10 +84,18 @@ QueueFamilyIndecies FindQueueFamilies(VkPhysicalDevice physical_device)
     return indecies;
 }
 
-
-static bool is_device_suitable(VkPhysicalDevice device)
+int MyWindow::CreateWindowSurface()
 {
-    QueueFamilyIndecies indecies = FindQueueFamilies(device);
+    int rc = OK;
+    if (glfwCreateWindowSurface(this->instance, this->window, nullptr, &(this->surface)) != VK_SUCCESS)
+        rc = CREATE_WINDOW_SURFACE_ERROR;
+    return rc;
+}
+
+
+bool MyWindow::is_device_suitable(VkPhysicalDevice device)
+{
+    QueueFamilyIndecies indecies = this->FindQueueFamilies(device);
     return indecies.is_complete();
 }
 
@@ -98,7 +111,7 @@ int MyWindow::PickPhysicalDevice()
         vkEnumeratePhysicalDevices(this->instance, &device_count, devices.data());
         for (const VkPhysicalDevice& device : devices)
         {
-            if (is_device_suitable(device))
+            if (this->is_device_suitable(device))
             {
                 this->physical_device = device;
                 break;
@@ -116,21 +129,26 @@ int MyWindow::PickPhysicalDevice()
 int MyWindow::CreateLogicalDevice()
 {
     int rc = OK;
-    QueueFamilyIndecies indecies = FindQueueFamilies(this->physical_device);
-    VkDeviceQueueCreateInfo queue_create_info{};
-    queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queue_create_info.queueFamilyIndex = indecies.graphicsFamily.value();
-    queue_create_info.queueCount = 1;
+    QueueFamilyIndecies indecies = this->FindQueueFamilies(this->physical_device);
+    std::vector<VkDeviceQueueCreateInfo> queue_create_info;
+    std::set<uint32_t> unique_queue_families = {indecies.graphicsFamily.value(), indecies.presentFamily.value()};
 
     float queue_priority = 1.0f;
-    queue_create_info.pQueuePriorities = &queue_priority;
+    for (uint32_t queue_family : unique_queue_families)
+    {
+        VkDeviceQueueCreateInfo new_queue_create_info{};
+        new_queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        new_queue_create_info.queueFamilyIndex = queue_family;
+        new_queue_create_info.queueCount = 1;
+        new_queue_create_info.pQueuePriorities = &queue_priority;
+        queue_create_info.push_back(new_queue_create_info);
+    }
 
     VkPhysicalDeviceFeatures device_fatures{};
-
     VkDeviceCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    create_info.pQueueCreateInfos = &queue_create_info;
-    create_info.queueCreateInfoCount = 1;
+    create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_info.size());
+    create_info.pQueueCreateInfos = queue_create_info.data();
     create_info.pEnabledFeatures = &device_fatures;
     create_info.enabledExtensionCount = 0;
 
@@ -138,7 +156,10 @@ int MyWindow::CreateLogicalDevice()
         rc = LOGICAL_DEVICE_CREATION_ERROR;
 
     else
+    {
         vkGetDeviceQueue(this->device, indecies.graphicsFamily.value(), 0, &(this->graphics_queue));
+        vkGetDeviceQueue(this->device, indecies.presentFamily.value(), 0, &(this->present_queue));
+    }
     return rc;
 }
 
@@ -146,11 +167,14 @@ int MyWindow::CreateLogicalDevice()
 int MyWindow::InitalizeVulkan()
 {
     int rc = OK;
-    if ((rc = CreateVulkanInstance()) == OK)
+    if ((rc = this->CreateVulkanInstance()) == OK)
     {
-        if ((rc = PickPhysicalDevice()) == OK)
+        if ((rc = this->CreateWindowSurface()) == OK)
         {
-            rc = CreateLogicalDevice();
+            if ((rc = this->PickPhysicalDevice()) == OK)
+            {
+                rc = this->CreateLogicalDevice();
+            }
         }
     }
     return rc;
@@ -168,12 +192,14 @@ int MyWindow::InitializeWindow()
     int rc = OK;
     if (glfwInit())
     {
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         GLFWwindow* new_window = glfwCreateWindow(this->width, this->height, this->title, nullptr, nullptr);
         if (new_window)
         {
             this->window = new_window;
-            glfwSetErrorCallback(error_callback);
-            glfwSetKeyCallback(this->window, key_callback);
+            // glfwSetErrorCallback(error_callback);
+            // glfwSetKeyCallback(this->window, key_callback);
         }
         else
             rc = GLFW_WINDOW_CREATION_ERROR;
