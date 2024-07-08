@@ -183,6 +183,7 @@ int MyWindow::InitalizeVulkan()
 void MyWindow::CleanUpVulkan()
 {
     vkDestroyDevice(this->device, nullptr);
+    vkDestroySurfaceKHR(this->instance, this->surface, nullptr);
     vkDestroyInstance(this->instance, nullptr);
 }
 
