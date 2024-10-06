@@ -17,7 +17,7 @@ int main()
             glfwMakeContextCurrent(manager.window);
             while (!glfwWindowShouldClose(manager.window))
             {
-                // glfwPollEvents();
+                glfwPollEvents();
             }
         }
     }

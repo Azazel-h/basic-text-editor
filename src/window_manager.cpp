@@ -37,18 +37,26 @@ int MyWindow::CreateVulkanInstance()
     appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo createInfo{};
+    createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
 
-    uint32_t glfw_extension_count = 0;
+    std::vector <const char*> extensions;
     const char** glfw_extensions;
+    uint32_t glfw_extension_count = 0;
     glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
-    createInfo.enabledExtensionCount = glfw_extension_count;
-    createInfo.ppEnabledExtensionNames = glfw_extensions;
+    for (int i = 0; i < glfw_extension_count; ++i)
+        extensions.push_back(glfw_extensions[i]);
 
+    #ifdef __APPLE__
+        extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+        extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    #endif // __APPLE__
+
+    createInfo.enabledExtensionCount = extensions.size();
+    createInfo.ppEnabledExtensionNames = extensions.data();
     createInfo.enabledLayerCount = 0;
     createInfo.pNext = nullptr;
-
     VkResult result = vkCreateInstance(&createInfo, nullptr, &(this->instance));
     if (result != VK_SUCCESS)
         rc = CREATE_VULKAN_INSTANCE_ERROR;
@@ -183,8 +191,11 @@ int MyWindow::InitalizeVulkan()
 void MyWindow::CleanUpVulkan()
 {
     vkDestroyDevice(this->device, nullptr);
-    vkDestroySurfaceKHR(this->instance, this->surface, nullptr);
-    vkDestroyInstance(this->instance, nullptr);
+    if (this->instance != VK_NULL_HANDLE)
+    {
+        vkDestroySurfaceKHR(this->instance, this->surface, nullptr);
+        vkDestroyInstance(this->instance, nullptr);
+    }
 }
 
 
