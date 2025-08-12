@@ -39,7 +39,7 @@ public:
 
     int InitializeWindow();
     int CreateWindowSurface();
-    int InitalizeVulkan();
+    int InitializeVulkan();
     void CleanUpVulkan();
 
 private:

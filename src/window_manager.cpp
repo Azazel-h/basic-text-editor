@@ -172,7 +172,7 @@ int MyWindow::CreateLogicalDevice()
 }
 
 
-int MyWindow::InitalizeVulkan()
+int MyWindow::InitializeVulkan()
 {
     int rc = OK;
     if ((rc = this->CreateVulkanInstance()) == OK)

@@ -12,7 +12,7 @@ int main()
     MyWindow manager(600, 400, title);
     if ((rc = manager.InitializeWindow()) == OK)
     {
-        if ((rc = manager.InitalizeVulkan()) == OK)
+        if ((rc = manager.InitializeVulkan()) == OK)
         {
             glfwMakeContextCurrent(manager.window);
             while (!glfwWindowShouldClose(manager.window))
