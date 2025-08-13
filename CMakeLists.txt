@@ -14,8 +14,10 @@ include_directories("${GLFW_DIR}/include")
 set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/external/imgui")
 include_directories(${IMGUI_DIR} "${IMGUI_DIR}/backends")
 
-find_package(Vulkan REQUIRED)
+set(GLM_DIR "${CMAKE_SOURCE_DIR}/external/glm")
+include_directories("${GLM_DIR}")
 
+find_package(Vulkan REQUIRED)
 set(LIBRARIES "glfw;Vulkan::Vulkan")
 
 include_directories("${CMAKE_SOURCE_DIR}/include")

@@ -210,8 +210,9 @@ int MyWindow::InitializeWindow()
         if (new_window)
         {
             this->window = new_window;
-            // glfwSetErrorCallback(error_callback);
-            // glfwSetKeyCallback(this->window, key_callback);
+            glfwSetErrorCallback(error_callback);
+            glfwSetKeyCallback(this->window, key_callback);
+
         }
         else
             rc = GLFW_WINDOW_CREATION_ERROR;
